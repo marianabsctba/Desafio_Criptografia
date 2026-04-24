@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Operação Cipher</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+html,body{margin:0;padding:0;background:#0d0d0d;color:#c8b89a;font-family:'Share Tech Mono','Courier New',monospace;min-height:100%;}
+*{box-sizing:border-box}
+body{overflow-x:hidden}
+#app{background:#0d0d0d;min-height:100vh;padding:24px 16px 40px}
+.shell{max-width:980px;margin:0 auto}
+.hdr{background:linear-gradient(180deg,#111 0%,#0c0c0c 100%);border:1px solid #3a2a1a;border-radius:12px;padding:1.5rem 1.2rem 1.15rem;text-align:center;margin-bottom:1.2rem;position:relative;box-shadow:0 0 24px rgba(0,0,0,.25)}
+.hdr::before{content:'CLASSIFICADO';position:absolute;top:12px;right:12px;font-size:9px;color:#8B0000;letter-spacing:3px;border:1px solid #8B0000;padding:2px 7px;opacity:.78}
+.hdr h1{font-family:'Special Elite',serif;font-size:28px;color:#d4a843;letter-spacing:4px;margin:0 0 4px}
+.hdr p{font-size:10px;color:#6b5a3a;letter-spacing:2px;margin:0}
+.redline{width:74px;height:2px;background:#8B0000;margin:.55rem auto}
+.prog-outer{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;height:6px;margin:.85rem 0 4px;overflow:hidden}
+.prog-fill{height:100%;background:#d4a843;border-radius:4px;transition:width .35s;box-shadow:0 0 8px rgba(212,168,67,.5)}
+.prog-lbl{font-size:9px;color:#6b5a3a;text-align:right;letter-spacing:1px}
+.card{background:#111;border:1px solid #2a2010;border-radius:12px;padding:1rem 1.15rem;margin-bottom:.9rem;position:relative}
+.card.active{border-color:#4a3317}
+.card.solved{border-color:#1d4f14;background:#0c120a}
+.card.locked{opacity:.42;filter:grayscale(.7);pointer-events:none}
+.card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:.85rem}
+.num{width:30px;height:30px;border-radius:50%;background:#1a1208;border:1px solid #3a2a10;color:#d4a843;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card.solved .num{background:#0a1a08;border-color:#2a5a10;color:#4aba20}
+.card-title{font-size:12px;color:#c8a870;flex:1;letter-spacing:1px}
+.badge{font-size:9px;padding:2px 7px;border-radius:3px;letter-spacing:2px}
+.b-s{background:#0a1a08;color:#4aba20;border:1px solid #1a4a10}
+.b-a{background:#1a1208;color:#d4a843;border:1px solid #3a2a10}
+.b-l{background:#141414;color:#333;border:1px solid #1e1e0e}
+.box{background:#080808;border-radius:8px;padding:.82rem 1rem;margin-bottom:.75rem}
+.cipher-box{border-left:3px solid #8B0000}
+.academic-box{border-left:3px solid #2d4a62}
+.chain-box{border-left:3px solid #31591d}
+.rule-box{border-left:3px solid #6c5b18}
+.box-lbl{font-size:9px;letter-spacing:3px;margin-bottom:6px;text-transform:uppercase}
+.cipher-lbl{color:#8B0000}
+.academic-lbl{color:#79a7d0}
+.chain-lbl{color:#6daf4f}
+.rule-lbl{color:#d9c15e}
+.cipher-txt{font-size:14px;color:#e8d090;word-break:break-word;line-height:1.85;letter-spacing:1px}
+.body-txt{font-size:11px;color:#9d9077;line-height:1.75}
+.inp-row,.irow,.cert-actions{display:flex;gap:8px;flex-wrap:wrap}
+.inp-row input,.irow input{flex:1;min-width:240px;background:#080808;border:1px solid #2a2010;border-radius:7px;padding:9px 11px;font-size:12px;color:#d4a843;outline:none;font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+.irow input{background:#0d0d0d;border-color:#3a2a1a}
+.inp-row input:focus,.irow input:focus{border-color:#d4a843}
+.inp-row input.err{border-color:#8B0000;animation:shk .3s}
+.inp-row input::placeholder,.irow input::placeholder{color:#2a1a08;font-size:11px}
+@keyframes shk{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+.btn-chk,.btn-go,.btn-print{background:#1a1208;border:1px solid #3a2a10;border-radius:7px;padding:9px 14px;font-size:10px;color:#d4a843;cursor:pointer;font-family:'Share Tech Mono',monospace;letter-spacing:1px;white-space:nowrap}
+.btn-go{background:#8B0000;color:#fff6d5;border:none;padding:10px 18px;font-weight:700;letter-spacing:2px}
+.btn-go:hover{background:#a10000}
+.btn-chk:hover,.btn-print:hover{background:#2a2010;border-color:#d4a843}
+.fb{font-size:10px;margin-top:6px;min-height:14px;letter-spacing:1px}
+.fb.ok{color:#4aba20}
+.fb.no{color:#8B0000}
+.blink{animation:bl 1.2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.cert-wrap{display:none;margin-top:1.3rem}
+.cert-wrap.show{display:block}
+.cert{background:#0a0800;border:2px solid #d4a843;border-radius:14px;padding:2.6rem 2rem;text-align:center;position:relative;max-width:820px;margin:0 auto}
+.cert::after{content:'';position:absolute;inset:10px;border:1px dashed #3a2a10;border-radius:9px;pointer-events:none}
+.cert::before{content:'ULTRA SECRETO';position:absolute;top:18px;left:50%;transform:translateX(-50%);font-size:8px;color:#8B0000;letter-spacing:4px;border:1px solid #8B0000;padding:2px 10px;opacity:.6}
+.cert-stars{color:#d4a843;font-size:14px;letter-spacing:6px;margin-bottom:.55rem}
+.cert-title{font-family:'Special Elite',serif;font-size:24px;color:#d4a843;letter-spacing:3px;margin-bottom:3px}
+.cert-sub{font-size:9px;color:#6b5a3a;letter-spacing:3px;margin-bottom:1.2rem}
+.cert-stamp{width:66px;height:66px;border:2px solid #8B0000;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto .85rem;flex-direction:column}
+.cert-stamp span:first-child{font-size:7px;color:#8B0000;letter-spacing:2px}
+.cert-stamp span:last-child{font-size:18px;color:#8B0000}
+.cert-body{font-size:11px;color:#8b7a5a;line-height:2;margin-bottom:.45rem;letter-spacing:1px}
+.cert-name{font-family:'Special Elite',serif;font-size:21px;color:#e8d090;border-bottom:1px solid #3a2a10;display:inline-block;padding-bottom:4px;margin:4px 0 .85rem;min-width:180px}
+.cert-pride{font-size:13px;color:#d4a843;margin-bottom:1rem;letter-spacing:2px}
+.cert-sig{font-family:'Special Elite',serif;font-size:12px;color:#6b5a3a;margin-top:.4rem}
+.cert-date{font-size:9px;color:#3a2010;margin-top:3px;letter-spacing:1px}
+@media (max-width:720px){
+  #app{padding:16px 10px 32px}
+  .hdr h1{font-size:22px}
+  .card{padding:.9rem}
+  .cert{padding:2.1rem 1.1rem}
+}
+
+.inp-row input,.irow input{
+  font-weight:700 !important;
+  color:#f0d68a !important;
+}
+.inp-row input::placeholder,.irow input::placeholder{
+  color:#8f7440 !important;
+  opacity:1 !important;
+  font-weight:700 !important;
+}
+.card-title,.box-lbl,.body-txt,.cipher-txt,.badge,.btn-chk,.btn-go,.btn-print,.fb,.prog-lbl{
+  font-weight:700 !important;
+}
+
+
+* {
+  font-weight: 700 !important;
+}
+
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</head>
+<body>
+<div id="app">
+  <div class="shell">
+    <div class="hdr">
+      <div style="font-size:9px;color:#8B0000;letter-spacing:3px;margin-bottom:.4rem">ARQUIVO Nº 001-X • ACESSO RESTRITO</div>
+      <h1>OPERAÇÃO CIPHER</h1>
+      <div class="redline"></div>
+      <p>CADA RESPOSTA ALTERA A ETAPA SEGUINTE</p>
+      <div id="pb-wrap" style="display:none;margin-top:.75rem">
+        <div class="prog-outer"><div class="prog-fill" id="pb" style="width:0%"></div></div>
+        <div class="prog-lbl" id="pb-lbl">MISSÃO: 0 DE 10 CONCLUÍDA</div>
+      </div>
+    </div>
+
+    <div class="card active" id="id-card">
+      <div class="card-hdr">
+        <div class="num blink">ID</div>
+        <div class="card-title">IDENTIFICAÇÃO DO AGENTE</div>
+      </div>
+      <div class="box academic-box" style="margin-bottom:.75rem">
+        <div class="box-lbl academic-lbl">BRIEFING DA MISSÃO</div>
+        <div class="body-txt">Esta versão é tecnicamente encadeada. A resposta correta de cada dossiê não funciona apenas como narrativa: ela altera a cifra seguinte como chave textual, deslocamento numérico ou palavra-chave estrutural. Sem resolver a etapa anterior corretamente, a próxima não fecha.</div>
+      </div>
+      <div class="irow">
+        <input type="text" id="pname" placeholder="SEU NOME DE AGENTE..." maxlength="60" onkeydown="if(event.key==='Enter')startGame()"/>
+        <button class="btn-go" onclick="startGame()">INICIAR</button>
+      </div>
+    </div>
+
+    <div id="clist" style="display:none"></div>
+
+    <div class="cert-wrap" id="cert-wrap">
+      <div class="cert" id="cert-only">
+        <div class="cert-stars">★ ★ ★ ★ ★</div>
+        <div class="cert-title">CERTIFICADO CONFIDENCIAL</div>
+        <div class="cert-sub">OPERAÇÃO CIPHER • ENCADEAMENTO COMPLETO • CASO FECHADO</div>
+        <div class="cert-stamp"><span>APROVADO</span><span>&#10003;</span></div>
+        <div class="cert-body">Este documento certifica que o agente</div>
+        <div class="cert-name" id="cert-name"></div>
+        <div class="cert-body">reconstruiu o encadeamento criptográfico do caso e identificou corretamente o culpado final.</div>
+        <div class="cert-pride">Método, paciência e raciocínio técnico.</div>
+        <div class="cert-sig">Mariana BS — Be Safe</div>
+        <div class="cert-date" id="cert-date"></div>
+      <div style="margin-top:10px;font-size:10px;color:#6b5a3a;word-break:break-all" id="cert-hash"></div>
+      <div style="position:absolute;top:20px;right:20px;border:2px solid #8B0000;border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;color:#8B0000;font-size:9px;letter-spacing:1px;">VALIDO</div>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <button class="btn-print" id="download-cert-btn" onclick="downloadCertificate()">BAIXAR CERTIFICADO EM PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const _0xk9 = [{"i":10,"v":"aWdlbsOocmUiLCJ0eXBlIjoiVklHRU7DiFJFIOKAlCBDSEFWRSA9IFJFU1BPU1RBIERPIERPU1NJw4ogMDEiLCJjaXBoZXIiOiJFWUZJ"},{"i":75,"v":"hlYSJ9LHsidGl0bGUiOiJET1NTScOKIDA5IOKAlCBDaWZyYSBkZSBDw6lzYXIgVmFyacOhdmVsIiwidHlw"},{"i":83,"v":"G9jYW1lbnRvIGRlIEPDqXNhciBwYXJhIGRlY2lmcmFyIG8gZG9zc2nDqiAwOS4iLCJoIjoiOTFmNGI4ZmJiMDYwNjc"},{"i":87,"v":"9ncsOhZmljYSBkYSBmYW3DrWxpYSBTSEEtMi4gRGlmZXJlbnRlbWVudGUgZGFzIGNpZnJhcyByZXZlcnPDrXZlaXMsIHVtYSBmdW7Dp8OjbyBoYXNoIHNlZ3VyYSDDqSB1bmlka"},{"i":71,"v":"bCByZWxldmFudGUgY29zdHVtYSByZXNpZGlyIG5hIGNoYXZlIG91IGVtIHBhcsOibWV0cm9zIGRlcml2YWRvcyBkZSBjb250ZXh0by4iLCJjaGFpbiI6IkEgcGFsYXZyYSByZXZlbGFkYSBubyBkb3"},{"i":31,"v":"EgcG9yIHVtYSB2YXJpw6F2ZWwgZXh0ZXJuYSBldmlkZW5jaWEgYSBkaXN0aW7Dp8OjbyBlbnRyZSBhbGdvcml0bW8gZSBjaGF2ZS4gTyBwcm9jZWRpbWVudG8gY29udGludWEgc2VuZG8gb"},{"i":36,"v":"GxldHJhcyBkYSByZXNwb3N0YSBkbyBkb3NzacOqIDAzIGUgdXNlIGVzc2UgdG90YWwgY29tbyBkZXNsb2NhbWVudG8gZGUgQ8Opc2FyIHBhcmEgZGVjaWZyY"},{"i":34,"v":"2EgZGUgY2hhdmUuIiwiY2hhaW4iOiJBIHJlc3Bvc3RhIGRvIGRvc3Npw6ogMDMgaW50ZXJmZXJlIG51bWVyaWNhbWVudGUgbmVzdGEgZXRhcGE6IHN1YSB"},{"i":3,"v":"BkZSB1bWEgb3BlcmHDp8OjbyBtb2R1bGFyIGVtIFoyNi4gU2V1IHZhbG9yIHBlZGFnw7NnaWNvIGVzdMOhI"},{"i":78,"v":"3V0cmEgZXRhcGEuIEVtIGNvbnRleHRvIGFjYWTDqm1pY28sIGlzc28gcGVybWl0ZSBkaXNjdXRpciBzZXBhcmHDp8OjbyBlbnRyZSBlc"},{"i":77,"v":"bnRhciBjb21vIGEgY2lmcmEgZGUgQ8Opc2FyIHBvZGUgZ2FuaGFyIGRlcGVuZMOqbmNpYSByZWFsIGRlIGVzdGFkbyBxdWFuZG8gbyBkZXNsb2NhbWVudG8gw6kgZGVyaXZhZG8gZGUgb"},{"i":12,"v":"lbGEgdXNhIHVtYSBzZXF1w6puY2lhIGRlIGRlc2xvY2FtZW50b3MgZGV0ZXJtaW5hZGEgcG9yIHVtYSBjaGF2ZSB0ZXh0dWFsIHJlcGV0aWRhLiBBY2FkZW1pY2FtZW50ZSwgaXNzbyByZWR1eiBh"},{"i":72,"v":"NzacOqIDA3IGNvbnRyb2xhIHRvZG9zIG9zIGRlc2xvY2FtZW50b3MgZGVzdGEgbm92YSBjaWZyYSBwb2xpYWxmYWLDqXRpY2EuIiwicnVs"},{"i":45,"v":"IGNvbW8gY2hhdmUgZGUgVmlnZW7DqHJlIHBhcmEgcmVjdXBlcmFyIGEgcGFsYXZyYSBkbyBkb3NzacOqIDA1LiIsImgiOiJjZDY1YzUzYzA4MWM0NmRiYzM2NzBlMTFkNTM5MDNjNDFmODk0YWU1ZWVmNWEzMDN"},{"i":86,"v":"kZDBjNDhjMGFiNDBlYjAyYzRiOCIsImFjYWRlbWljIjoiU0hBLTI1NiDDqSB1bWEgZnVuw6fDo28gaGFzaCBjcmlwdG"},{"i":38,"v":"Ug4oCUIENpZnJhIGRlIFZpZ2Vuw6hyZSIsInR5cGUiOiJWSUdFTsOIUkUg4oCUIENIQVZFID0gUkVTUE9TVEEgRE8gRE9TU0nDiiAwNCIsImNpcG"},{"i":26,"v":"A1w5c1LiBTZSBhIHBhbGF2cmEgYW50ZXJpb3IgZXN0aXZlciBlcnJhZGEsIGFzIGNvb3JkZW5hZGFzIHBhc3NhbSBhIGFwb250YXIgcGFyYSBsZXRyYXMgZXJyYWRhcy4iLCJydWxlIjoiTW9"},{"i":50,"v":"wb3IgdW1hIGNvbnN0YW50ZSBkZXJpdmFkYSBkYSBldGFwYSBhbnRlcmlvci4gRG8gcG9udG8gZGUgdmlzdGEgcGVkYWfDs2dpY28sIGlzc28gbW9zdHJhIGN"},{"i":48,"v":"WRlbWljIjoiQTFaMjYgbWFwZWlhIGxldHJhcyBwYXJhIHN1YXMgcG9zacOnw7VlcyBudW3DqXJpY2FzIG5vIGFsZm"},{"i":76,"v":"ZSI6IkPDiVNBUiDigJQgREVTTE9DQU1FTlRPID0gVEFNQU5ITyBEQSBSRVNQT1NUQSBETyBET1NTScOKIDA4IiwiY2lwaGVyIjoiVFZZS1ZUViIsImFjYWRlbWljIjoiTWVzbW8gdW0gYWxnb3JpdG1vIGVsZW1l"},{"i":69,"v":"ZXZpZMOqbmNpYXMuIERpZGF0aWNhbWVudGUsIGlzc28gYWp1ZGEgYSBkZW1vbnN0cmFyIHF1ZSwgZW0gY3JpcHRv"},{"i":65,"v":"RhcGEuIiwicnVsZSI6Ik1vbnRlIHVtYSBub3ZhIGdyYWRlIFBvbHliaXVzIDXDlzUgdXNhbmRvIGEgcmVzcG9zdGEgZG8gZG9zc2nDqiAwNiBjb21vIHBhbGF2cmEtY2hhdmUgZSBkZXBvaXMgZGVjaWZyZ"},{"i":84,"v":"yNGVjMWY1NzU5ZDNkOTU1YjczYjljY2FmNDg4NTdkZDBjNDhjMGFiNDBlYjAyYzRiOCJ9LHsidGl0bGUiOiJET1NTScOKIDEwIOKAlCBWZXJpZmljYcOnw6NvI"},{"i":27,"v":"udGUgYSBncmFkZSBQb2x5Yml1cyA1w5c1IGNvbSBhIHJlc3Bvc3RhIGRvIGRvc3Npw6ogMDIsIHNlbSByZXBldGly"},{"i":85,"v":"EZpbmFsIHBvciBIYXNoIiwidHlwZSI6IlNIQS0yNTYg4oCUIEVTQ1JFVkEgTyBDVUxQQURPIiwiY2lwaGVyIjoiOTFmNGI4ZmJiMDYwNjcyNGVjMWY1NzU5ZDNkOTU1YjczYjljY2FmNDg4NTd"},{"i":92,"v":"bHVzw6NvIGVzY3JpdGEgcG9yIHZvY8OqIGNvaW5jaWRlIGNvbSBhIHNvbHXDp8OjbyBmaW5hbCBkbyBjYXNvLiIsInJ1bGUiOiJOw6NvIHRlbnRlIGludmVydGVyIG8gaGFzaC4gVXNlIGEgY29uY2x1c8"},{"i":0,"v":"W3sidGl0bGUiOiJET1NTScOKIDAxIOKAlCBDaWZyYSBkZSBDw6lzYXIiLCJ0eXBlIjoiQ8OJU0FSIOKIkjciLCJjaXBoZXIiOiJaQlpXTFBBViIsImFjYWRlbWljIjoiQSBjaWZyYSB"},{"i":24,"v":"FsdGVyYXIgbsOjbyBzw7MgdmFsb3JlcyBkZSBzYcOtZGEsIG1hcyBhIHByw7NwcmlhIGVzdHJ1dHVyYSBpbnRlcm5hIGRvIGV"},{"i":54,"v":"mVtb3ZlciBlc3NlIGRlc2xvY2FtZW50bywgYSBwYWxhdnJhIGZpbmFsIHNhaSBlcnJhZGEuIiwicnVsZSI6IkNvbnRlIGFzI"},{"i":93,"v":"OjbyBvYnRpZGEgbm8gZG9zc2nDqiAwOSBlIGVzY3JldmEgbyBjdWxwYWRvIGZpbmFsLiIsImgiOiI5MWY0YjhmYmIwNjA"},{"i":64,"v":"RhIGFxdWkuIExvZ28sIGEgZXRhcGEgYW50ZXJpb3IgYWx0ZXJhIGRpcmV0YW1lbnRlIGEgbGVpdHVyYSBkYXMgY29vcmRlbmFkYXMgZGVzdGEgZX"},{"i":80,"v":"2YcOnw6NvIHRvcm5hbSBleGVyY8OtY2lvcyBtYWlzIHJvYnVzdG9zLiIsImNoYWluIjoiQSBxdWFudGlkYWRlIGRlIGxldHJhcyBkYSByZXNwb3N0YSBkbyBk"},{"i":51,"v":"vbW8gYXTDqSB1bSBzaXN0ZW1hIG11aXRvIHNpbXBsZXMgcG9kZSBpbmNvcnBvcmFyIGRlcGVuZMOqbmNpYSBkZSBjaGF2ZSBlIGV4aWdpciB1bWEgZXRhcGEgaW50ZXJtZWRpw6FyaWEgZGUgb"},{"i":6,"v":"YWxhdnJhIGV4dHJhw61kYSBpbmF1Z3VyYSBhIGNhZGVpYSBwcm9iYXTDs3JpYS4gRWxhIG7Do28gw6kgYXBlbmFz"},{"i":4,"v":"GVtIGludHJvZHV6aXIgb3MgY29uY2VpdG9zIGRlIGFsZ29yaXRtbywgY2hhdmUsIGVzcGHDp28gZGUgY2hhd"},{"i":19,"v":"AwODQ0ZTM5YTBjMjBmZDEzYTk5OTNkYzJhYmI1YjlhNzgxMmJkMTQzZWI5ZCJ9LHsidGl0bGUiOiJET1NTScOKIDAzIOKAlCBHcmFkZSBQb2x5Ym"},{"i":46,"v":"mZTNkMjc1ZWVkNzBmNDNhIn0seyJ0aXRsZSI6IkRPU1NJw4ogMDYg4oCUIEExWjI2IGNvbSBEZXNsb2NhbWVudG8gTnVtw6lyaWNvIiwidHlwZSI6Ik"},{"i":20,"v":"l1cyBjb20gUGFsYXZyYS1DaGF2ZSIsInR5cGUiOiJQT0xZQklVUyA1w5c1IOKAlCBDSEFWRSA9IFJFU1BPU1RBIERPIERPU"},{"i":18,"v":"cGFyYSByZWN1cGVyYXIgYSBwYWxhdnJhIGNvcnJldGEgZGVzdGUgZG9zc2nDqi4iLCJoIjoiZjFiMGQ1NzMyNzk5MWUzMTRkMj"},{"i":91,"v":"lvciBqw6EgcmV2ZWxvdSBvIG5vbWUgZG8gY3VscGFkby4gQWdvcmEgbyBoYXNoIGFwZW5hcyB2YWxpZGEgc2UgYSBjb25j"},{"i":49,"v":"FiZXRvLiBOZXN0YSB2YXJpYW50ZSwgb3MgbsO6bWVyb3MgZm9yYW0gcHJldmlhbWVudGUgZGVzbG9jYWRvcyB"},{"i":43,"v":"yBkb3NzacOqIDA0IGFnb3JhIGNvbnRyb2xhIGVzdGEgY2lmcmEgaW50ZWlyYS4gTsOjbyDDqSBkaWNhIG5hcnJhdGl2YTogZWxhIGFsdGVyYSBjb25jcmV0Y"},{"i":25,"v":"zcXVlbWEgZGUgY29kaWZpY2HDp8Ojby4iLCJjaGFpbiI6IkEgcmVzcG9zdGEgZG8gZG9zc2nDqiAwMiByZW9yZ2FuaXphIHRvZGEgYSBncmFkZS"},{"i":79,"v":"3BlY2lmaWNhw6fDo28gZG8gYWxnb3JpdG1vIGUgbWF0ZXJpYWwgZGUgY2hhdmUsIGFsw6ltIGRlIG1vc3RyYXIgY29tbyBjYWRlaWFzIGRlIGRlcml"},{"i":81,"v":"b3NzacOqIDA4IGRldGVybWluYSBvIGRlc2xvY2FtZW50byBkZXN0YSBwZW7Dumx0aW1hIGV2aWTDqm5jaWEuIE8gdmFsb3IgYW50ZXJpb3IgaW50ZXJmZXJlIGRpcmV0YW1lbnRlIG5vIHRleHRvIHF1ZSB"},{"i":7,"v":"IG5hcnJhdGl2YTogdG9ybmEtc2UgYSBjaGF2ZSBlZmV0aXZhIGRvIHByw7N4aW1vIGFsZ29yaXRtby4iLCJ"},{"i":61,"v":"mVmb3LDp2EgYSBpZGVpYSBkZSBlc3RhZG8gaW50ZXJubyBkZXBlbmRlbnRlIGRlIGVudHJhZGEuIEVtIGNvbnRleHRvIGFjYW"},{"i":55,"v":"GxldHJhcyBkYSByZXNwb3N0YSBkbyBkb3NzacOqIDA1LiBTdWJ0cmFpYSBlc3NlIHZhbG9yIGRlIGNhZGEgbs"},{"i":23,"v":"IG8gYWxmYWJldG8gbXVkYS4gSXNzbyDDqSBkaWRhdGljYW1lbnRlIGltcG9ydGFudGUgcG9ycXVlIG1vc3RyYSBxdWUgYSBjaGF2ZSBwb2RlIG"},{"i":16,"v":"FudGVyaW9yIGludGVyZmVyZSBkaXJldGFtZW50ZSBubyBwcm9jZXNzbyBkZSBkZWNpZnJhw6fDo28gcG9ycXVlI"},{"i":67,"v":"RsZSI6IkRPU1NJw4ogMDgg4oCUIENpZnJhIGRlIFZpZ2Vuw6hyZSIsInR5cGUiOiJWSUdFTsOIUkUg4oCUIENIQVZFID0gUkVTUE9TVEEgRE8gRE9TU0nDiiAwNyIsImNpcGhlciI6IlBPVVhW"},{"i":37,"v":"XIgbyBkb3NzacOqIDA0LiIsImgiOiJlMWMwZjFhYjE2OTg4YjFkYWU1Y2U5NzEyYjMwODNiMjViNTUwZTNmOThjNzQ4OWY2NDI4Y2UxMzU1OTA0MmI0In0seyJ0aXRsZSI6IkRPU1NJw4ogMD"},{"i":74,"v":"SBwYXJhIGRlY2lmcmFyIG8gZG9zc2nDqiAwOC4iLCJoIjoiNzg2YjZlMTA3ZmI5NTY2NzE3NjhmZDA1NzQ4YTcwYjAzOGE5MjczYWEyMmI3YzUzYjg3NTI4YjMyMDU0OT"},{"i":11,"v":"TUMiLCJhY2FkZW1pYyI6IkEgY2lmcmEgZGUgVmlnZW7DqHJlIMOpIHVtYSBjaWZyYSBwb2xpYWxmYWLDqXRpY2EgY2zDoXNzaWNhLiBFbSB2ZXogZGUgdW0gw7puaWNvIGFsZmFiZXRvIGNpZnJhbnRlLCB"},{"i":47,"v":"ExWjI2IOKAlCBTVUJUUkFJQSBPIFRBTUFOSE8gREEgUkVTUE9TVEEgRE8gRE9TU0nDiiAwNSIsImNpcGhlciI6IjEzLTctMjQtOS0yMS0xOSIsImFjY"},{"i":94,"v":"2NzI0ZWMxZjU3NTlkM2Q5NTViNzNiOWNjYWY0ODg1N2RkMGM0OGMwYWI0MGViMDJjNGI4In1d"},{"i":44,"v":"W1lbnRlIGEgdHJhbnNmb3JtYcOnw6NvIGFwbGljYWRhIGVtIGNhZGEgY2FyYWN0ZXJlLiIsInJ1bGUiOiJVc2UgYSByZXNwb3N0YSBkbyBkb3NzacOqIDA0"},{"i":82,"v":"2b2PDqiBjb25zZWd1ZSByZWN1cGVyYXIgYXF1aS4iLCJydWxlIjoiQ29udGUgYXMgbGV0cmFzIGRhIHJlc3Bvc3RhIGRvIGRvc3Npw6ogMDggZSB1c2UgZXNzZSBuw7ptZXJvIGNvbW8gZGVzb"},{"i":40,"v":"lbnRlLCBkZXRlcm1pbmFkbyBwZWxhIGxldHJhIGNvcnJlc3BvbmRlbnRlIGRhIGNoYXZlLiBPIG3DqXRvZG8gw6kg"},{"i":57,"v":"TViNjU1ZjZiZTMxMTM5MTZlZWI0ZTJjMzNjMzU5OTMzMGQ1ZWJlNWNkYzQwMjdkN2Y5ZDIyOTY4ZjExMDEwIn0seyJ0aXRsZSI6IkRPU1NJw4ogMDcg"},{"i":68,"v":"TkciLCJhY2FkZW1pYyI6IkVuY2FkZWFyIFZpZ2Vuw6hyZSBjb20gdW1hIGNoYXZlIGRlcml2YWRhIGRlIHVtYSBldGFwYSBhbnRlcmlvciBjcmlhIHVtIHbDrW5jdWxvIGV4cGzDrWNpdG8gZW50cmUg"},{"i":70,"v":"Z3JhZmlhLCBjb25oZWNlciBvIGFsZ29yaXRtbyBuw6NvIGJhc3RhOiBhIGluZm9ybWHDp8OjbyBvcGVyYWNpb25h"},{"i":35,"v":"xdWFudGlkYWRlIGRlIGxldHJhcyDDqSBvIGRlc2xvY2FtZW50byBleGF0byBuZWNlc3PDoXJpbyBwYXJhIGFicmlyIGEgbWVuc2FnZW0uIiwicnVsZSI6IkNvbnRlIGFzI"},{"i":32,"v":"yBtZXNtbywgbWFzIG8gdmFsb3IgZG8gZGVzbG9jYW1lbnRvIGRlaXhhIGRlIHNlciBww7pibGljbyBlIHBhc3NhI"},{"i":41,"v":"Y2VudHJhbCBlbSBjdXJzb3MgaW50cm9kdXTDs3Jpb3MgZGUgY3JpcHRvZ3JhZmlhIGNsw6Fzc2ljYSBwb3IgcGVybWl0aXIgZGlzY3V0aXIgcGVyaW9kaWNpZGFkZSwgcmVwZXRpw6fDo2"},{"i":90,"v":"G9yIGRvIG5vbWUgZG8gY3VscGFkbyBvYnRpZG8gYW8gZmluYWwgZGEgY2FkZWlhIHByb2JhdMOzcmlhLiIsImNoYWluIjoiQSBldGFwYSBhbnRlcm"},{"i":14,"v":"F1ZWJyw6F2ZWwgcXVhbmRvIGEgY2hhdmUgc2UgcmVwZXRlIG91IHBvZGUgc2VyIGVzdGltYWRhLiIsImNoYWluIjoiU2VtIGEgcm"},{"i":56,"v":"O6bWVybyBkYSBzZXF1w6puY2lhIGUgc8OzIGRlcG9pcyBjb252ZXJ0YSBvIHJlc3VsdGFkbyBwYXJhIEExWjI2LiIsImgiOiIxO"},{"i":63,"v":"BzdWJzdGl0dWnDp8OjbyBlIGNvbmZpZ3VyYcOnw6NvIGRvIGFsZ29yaXRtby4iLCJjaGFpbiI6IkEgcmVzcG9zdGEgZG8gZG9zc2nDqiAwNiByZWRlZmluZSBhIGdyYWRlIHVzYW"},{"i":58,"v":"4oCUIEdyYWRlIFBvbHliaXVzIGNvbSBQYWxhdnJhLUNoYXZlIiwidHlwZSI6IlBPTFlCSVVTIDXDlzUg4oCUIENIQVZFID0gUkVTUE9T"},{"i":15,"v":"VzcG9zdGEgY29ycmV0YSBkbyBkb3NzacOqIDAxLCBlc3RhIGV0YXBhIG7Do28gYWJyZS4gQSBwYWxhdnJhIG"},{"i":52,"v":"m9ybWFsaXphw6fDo28gYW50ZXMgZGEgbGVpdHVyYSBmaW5hbC4iLCJjaGFpbiI6IkEgcXVhbnRpZGFkZSBkZSBsZXRyYXMgZGEgcmVzcG9zdGE"},{"i":33,"v":"GEgZGVwZW5kZXIgZG8gZXN0YWRvIGFudGVyaW9yIGRvIHByb2Nlc3NvLiBFc3NlIHRpcG8gZGUgY29uc3RydcOnw6NvIMOpIMO6dGlsIHBhcmEgZW5zaW5hciBkZXJpdmHDp8OjbyBkaW7Dom1pY"},{"i":1,"v":"kZSBDw6lzYXIgw6kgdW1hIGNpZnJhIGRlIHN1YnN0aXR1acOnw6NvIG1vbm9hbGZhYsOpdGljYSBlbSBxdWUgY2FkYSBzw61tYm9sbyBhbGZh"},{"i":30,"v":"ITyBEQSBSRVNQT1NUQSBETyBET1NTScOKIDAzIiwiY2lwaGVyIjoiQktUS1RVIiwiYWNhZGVtaWMiOiJVbWEgY2lmcmEgZGUgQ8Opc2FyIHBhcmFtZXRyaXphZG"},{"i":88,"v":"XJlY2lvbmFsOiBzdWEgZmluYWxpZGFkZSDDqSB2ZXJpZmljYXIgaW50ZWdyaWRhZGUsIGF1dGVudGljaWRhZGUgY29udGV4dHVhbCBlIGlndWFsZGFk"},{"i":13,"v":"IHZ1bG5lcmFiaWxpZGFkZSBpbWVkaWF0YSBkYSBhbsOhbGlzZSBkZSBmcmVxdcOqbmNpYSBzaW1wbGVzLCBlbWJvcmEgbyBtw6l0b2RvIGNvbnRpbnVlIH"},{"i":42,"v":"8gZGUgY2hhdmUsIMOtbmRpY2UgZGUgY29pbmNpZMOqbmNpYSBlIGNyaXB0b2Fuw6FsaXNlIGRlIEthc2lza2kuIiwiY2hhaW4iOiJBIHBhbGF2cmEgZW5jb250cmFkYSBub"},{"i":39,"v":"hlciI6IlNNUEVFTyIsImFjYWRlbWljIjoiTmEgY2lmcmEgZGUgVmlnZW7DqHJlLCBjYWRhIHBvc2nDp8OjbyBkbyB0ZXh0byBwb2RlIHNvZnJlciB1bSBkZXNsb2NhbWVudG8gZGlmZXJ"},{"i":2,"v":"YsOpdGljbyBzb2ZyZSB1bSBkZXNsb2NhbWVudG8gZml4by4gRW0gdGVybW9zIGFjYWTDqm1pY29zLCB0cmF0YS1zZS"},{"i":9,"v":"U0ZGM5ZDIxYTNiOTc2Y2JmMDZlZWNlNjg0ZDg0MDVlYWQ4ZDkxMWYyN2E0ODUxM2M2NDE4NzUyNSJ9LHsidGl0bGUiOiJET1NTScOKIDAyIOKAlCBDaWZyYSBkZSBW"},{"i":73,"v":"ZSI6IlVzZSBleGF0YW1lbnRlIGEgcmVzcG9zdGEgZG8gZG9zc2nDqiAwNyBjb21vIGNoYXZlIGRlIFZpZ2Vuw6hyZ"},{"i":17,"v":"GRlZmluZSB0b2RvcyBvcyBkZXNsb2NhbWVudG9zIGRhIG1lbnNhZ2VtLiIsInJ1bGUiOiJVc2UgZXhhdGFtZW50ZSBhIHJlc3Bvc3RhIGRvIGRvc3Npw6ogMDEgY29tbyBjaGF2ZSBkZSBWaWdlbsOocmUg"},{"i":66,"v":"SBhcyBjb29yZGVuYWRhcyBkbyBkb3NzacOqIDA3LiIsImgiOiI1ZGY3NzFlNzg5NzRlM2ZkZjRkNzNlMDA1NjI1NmJhMzdlNDY5NDRjODc5MTIxMWFiYjliNjFlN2EyZWM0MjAzIn0seyJ0aX"},{"i":53,"v":"gZG8gZG9zc2nDqiAwNSBpbnRlcmZlcmUgbm8gdmFsb3IgZGUgY2FkYSBuw7ptZXJvIGRlc3RhIGV0YXBhLiBTZW0gc"},{"i":59,"v":"VEEgRE8gRE9TU0nDiiAwNiIsImNpcGhlciI6IjM1IDE1IDMyIDQ0IDI0IiwiYWNhZGVtaWMiOiJBbyBwYXJhbWV0cml6YXIgbm92YW1lbnRlIG8gcXV"},{"i":60,"v":"hZHJhZG8gZGUgUG9seWJpdXMgY29tIHVtYSBwYWxhdnJhLWNoYXZlIGRlcml2YWRhIGRhIGV0YXBhIGFudGVyaW9yLCBvIGV4ZXJjw61jaW8gc"},{"i":8,"v":"ydWxlIjoiUmVzb2x2YSBub3JtYWxtZW50ZS4gQSByZXNwb3N0YSBvYnRpZGEgc2Vyw6EgdXNhZGEgbGl0ZXJhbG1lbnRlIGNvbW8gY2hhdmUgbm8gZG9zc2nDqiAwMi4iLCJoIjoiM2ZlZDQ5ZD"},{"i":62,"v":"TDqm1pY28sIGVzc2UgdGlwbyBkZSBlbmNhZGVhbWVudG8gYWp1ZGEgYSBkaWZlcmVuY2lhciByZXByZXNlbnRhw6fDo28sIHRhYmVsYSBkZS"},{"i":29,"v":"Y2E1OGEwNTIyYzA1ZiJ9LHsidGl0bGUiOiJET1NTScOKIDA0IOKAlCBDaWZyYSBkZSBDw6lzYXIgVmFyacOhdmVsIiwidHlwZSI6IkPDiVNBUiDigJQgREVTTE9DQU1FTlRPID0gVEFNQU5"},{"i":89,"v":"ZSBkZSBlbnRyYWRhLCBuw6NvIHBlcm1pdGlyIGRlY2lmcmHDp8OjbyBkaXJldGEuIEFxdWksIG8gaGFzaCBmdW5jaW9uYSBjb21vIHZlcmlmaWNhZ"},{"i":21,"v":"1NJw4ogMDIiLCJjaXBoZXIiOiIyMiAzNSAxNSAyMyAxNSIsImFjYWRlbWljIjoiTyBxdWFkcmFkbyBkZSBQb2x5Yml1cyBjb252ZXJ0ZSBsZXRyYXMgZW0gY29vcmRlbmFk"},{"i":28,"v":"IGxldHJhcyBlIHVuaWZpY2FuZG8gSS9KLiBEZXBvaXMgbGVpYSBhcyBjb29yZGVuYWRhcy4iLCJoIjoiNmJiOTQxN2QwNGZlMmQ3NzI1NWUyNWJjMjM1MGI2ODhmNzJlYmE1MTI1Y2JhMTkxZDQz"},{"i":5,"v":"mVzIHJlZHV6aWRvIGUgdnVsbmVyYWJpbGlkYWRlIMOgIGZvcsOnYSBicnV0YSBlIMOgIGFuw6FsaXNlIGRlIGZyZXF1w6puY2lhLiIsImNoYWluIjoiQSBwcmltZWlyYSBw"},{"i":22,"v":"YXMgZGUgbGluaGEgZSBjb2x1bmEuIFF1YW5kbyBhIGdyYWRlIMOpIG1vbnRhZGEgYSBwYXJ0aXIgZGUgdW1hIHBhbGF2cmEtY2hhdmUsIGEgcG9zacOnw6NvIGRlIHByYXRpY2FtZW50ZSB0b2Rv"}];
+const _0xu8 = _0xs => new TextDecoder().decode(Uint8Array.from(atob(_0xs), _0xc => _0xc.charCodeAt(0)));
+const _0xraw = _0xk9.sort((_0xa,_0xb)=>_0xa.i-_0xb.i).map(_0xp=>_0xp.v).join('');
+const DOSSIERS = JSON.parse(_0xu8(_0xraw)).map(_0xd => {
+  Object.defineProperty(_0xd, 'answerHash', { value: _0xd.h, enumerable:false, writable:false });
+  delete _0xd.h;
+  return Object.freeze(_0xd);
+});
+Object.freeze(DOSSIERS);
+const _0xwait = _0xms => new Promise(_0xr => setTimeout(_0xr, _0xms));
+const _0xh = _0xd => String(Object.getOwnPropertyDescriptor(_0xd, 'answerHash').value);
+const _0xjitter = () => 520 + Math.floor(Math.random() * 760);
+const _0xguard = (() => { let _0xa = 0; return async (_0xok) => { if(!_0xok) _0xa++; await _0xwait(Math.min(2200, _0xjitter() + (_0xa * 160))); }; })();
+
+let playerName = '';
+let solved = new Array(DOSSIERS.length).fill(false);
+
+function norm(s){
+  return s
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^A-Z0-9 ]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+async function sha256(text){
+  const data = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function startGame(){
+  const input = document.getElementById('pname');
+  const n = input.value.trim();
+  if(!n){ input.style.borderColor = '#8B0000'; return; }
+  playerName = n;
+  document.getElementById('id-card').style.display = 'none';
+  document.getElementById('pb-wrap').style.display = 'block';
+  document.getElementById('clist').style.display = 'block';
+  renderAll();
+}
+
+function renderAll(){
+  const wrap = document.getElementById('clist');
+  wrap.innerHTML = '';
+  DOSSIERS.forEach((d,i) => wrap.appendChild(buildCard(d,i)));
+  updateProg();
+}
+
+function buildCard(d,i){
+  const div = document.createElement('div');
+  const isSolved = solved[i];
+  const isLocked = i > 0 && !solved[i-1];
+  div.className = 'card' + (isSolved ? ' solved' : (isLocked ? ' locked' : ' active'));
+  const bTxt = isSolved ? 'RESOLVIDO' : (isLocked ? 'BLOQUEADO' : 'ATIVO');
+  const bCls = isSolved ? 'b-s' : (isLocked ? 'b-l' : 'b-a');
+
+  let inputBlock = '';
+  if(!isLocked && !isSolved){
+    inputBlock = `<div class="inp-row"><input type="text" id="inp-${i}" placeholder="${i===DOSSIERS.length-1 ? 'ESCREVA O CULPADO FINAL...' : 'REGISTRE A PALAVRA DECIFRADA...'}" onkeydown="if(event.key==='Enter')checkAnswer(${i})" autocomplete="off"/><button class="btn-chk" id="btn-${i}" onclick="checkAnswer(${i})">VERIFICAR</button></div><div class="fb" id="fb-${i}"></div>`;
+  } else if(isSolved){
+    inputBlock = `<div class="fb ok">✓ EVIDÊNCIA VALIDADA — PRÓXIMO DOSSIÊ LIBERADO.</div>`;
+  } else {
+    inputBlock = `<div class="fb" style="color:#2a1a08;font-size:10px">[ ACESSO NEGADO — CONCLUA O DOSSIÊ ANTERIOR ]</div>`;
+  }
+
+  div.innerHTML = `
+    <div class="card-hdr">
+      <div class="num">${String(i+1).padStart(2,'0')}</div>
+      <div class="card-title">${d.title}</div>
+      <span class="badge ${bCls}">${bTxt}</span>
+    </div>
+    <div class="box cipher-box">
+      <div class="box-lbl cipher-lbl">MENSAGEM INTERCEPTADA • ${d.type}</div>
+      <div class="cipher-txt">${d.cipher}</div>
+    </div>
+    ${!isLocked ? `<div class="box academic-box"><div class="box-lbl academic-lbl">NOTA ACADÊMICA</div><div class="body-txt">${d.academic}</div></div><div class="box chain-box"><div class="box-lbl chain-lbl">ENCAIXE TÉCNICO</div><div class="body-txt">${d.chain}</div></div><div class="box rule-box"><div class="box-lbl rule-lbl">COMO A ETAPA ANTERIOR ENTRA NESTA</div><div class="body-txt">${d.rule}</div></div>` : ''}
+    ${inputBlock}`;
+
+  return div;
+}
+
+async function checkAnswer(i){
+  const inp = document.getElementById('inp-'+i);
+  const fb = document.getElementById('fb-'+i);
+  const btn = document.getElementById('btn-'+i);
+  const normalized = norm(inp.value);
+  if(!normalized){
+    fb.className = 'fb no';
+    fb.textContent = '✗ CAMPO VAZIO.';
+    inp.classList.add('err');
+    setTimeout(()=>inp.classList.remove('err'),300);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'ANALISANDO';
+  const digest = await sha256(normalized);
+  await _0xwait(_0xjitter());
+  const ok = digest === _0xh(DOSSIERS[i]);
+  if(!ok) await _0xguard(false);
+
+  if(ok){
+    solved[i] = true;
+    fb.className = 'fb ok';
+    fb.textContent = i === DOSSIERS.length-1 ? '✓ CULPADO CONFIRMADO.' : '✓ EVIDÊNCIA CONFIRMADA.';
+    setTimeout(() => {
+      renderAll();
+      if(solved.every(Boolean)) showCert();
+    }, 280);
+  } else {
+    inp.classList.add('err');
+    setTimeout(()=>inp.classList.remove('err'),320);
+    fb.className = 'fb no';
+    fb.textContent = '✗ EVIDÊNCIA INCONSISTENTE.';
+    btn.disabled = false;
+    btn.textContent = 'VERIFICAR';
+  }
+}
+
+function updateProg(){
+  const n = solved.filter(Boolean).length;
+  document.getElementById('pb').style.width = (n * 10) + '%';
+  document.getElementById('pb-lbl').textContent = 'MISSÃO: ' + n + ' DE 10 CONCLUÍDA';
+}
+
+function showCert(){
+  const w = document.getElementById('cert-wrap');
+  w.className = 'cert-wrap show';
+  document.getElementById('cert-name').textContent = playerName;
+  const now = new Date();
+  document.getElementById('cert-date').textContent = 'EMITIDO EM: ' + now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
+  w.scrollIntoView({behavior:'smooth'});
+}
+
+async function downloadCertificate(){
+  const cert = document.getElementById('cert-only');
+  const hashTarget = document.getElementById('cert-name').textContent || playerName || 'AGENTE';
+  const data = new TextEncoder().encode(hashTarget);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2,'0')).join('');
+  document.getElementById('cert-hash').textContent = 'HASH DO AGENTE: ' + hash;
+
+  const btn = document.getElementById('download-cert-btn');
+  if (btn) btn.style.display = 'none';
+
+  const canvas = await html2canvas(cert, {
+    scale: 3,
+    backgroundColor: '#0a0800',
+    useCORS: true
+  });
+
+  if (btn) btn.style.display = '';
+
+  const imgData = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+
+  const pdf = new jsPDF({
+    orientation: canvas.width >= canvas.height ? 'landscape' : 'portrait',
+    unit: 'px',
+    format: [canvas.width, canvas.height]
+  });
+
+  pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+  pdf.save('certificado_operacao_cipher.pdf');
+}
+
+</script>
+</body>
+</html>
